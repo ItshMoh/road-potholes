@@ -1,4 +1,5 @@
 """Pothole Complaint Agent: one Streamlit page. Run with: streamlit run app.py"""
+import hmac
 import json
 import os
 from datetime import datetime
@@ -32,6 +33,7 @@ GMAIL_READY = gmail_configured()
 GMAIL_ADDRESS = os.getenv("GMAIL_ADDRESS", "").strip()
 TEST_MODE = os.getenv("TEST_MODE", "true").strip().lower() != "false"
 DEFAULT_LANGUAGE = os.getenv("DEFAULT_LANGUAGE", "hi-IN").strip()
+APP_PASSWORD = os.getenv("APP_PASSWORD", "").strip()  # set on public deployments
 SOURCE_LABELS = {PHOTO_GPS: "📷 Where the photo was taken", DEVICE_LOCATION: "📍 Where I am now"}
 
 # State tied to one photo; cleared when a new photo is uploaded.
@@ -63,6 +65,15 @@ def run_translation(body: str, language: str) -> None:
 st.set_page_config(page_title="Pothole Complaint Agent", page_icon="🕳️")
 st.title("🕳️ Pothole Complaint Agent")
 st.caption("Photo → AI check → location → formal complaint → email to the road department. Powered by Sarvam AI.")
+
+if APP_PASSWORD and not ss.get("unlocked"):
+    entered = st.text_input("App password", type="password")
+    if entered and hmac.compare_digest(entered, APP_PASSWORD):
+        ss.unlocked = True
+        st.rerun()
+    if entered:
+        st.error("Wrong password.")
+    st.stop()
 
 if not SARVAM_READY:
     st.error("SARVAM_API_KEY is missing in .env, so photo checking and letter writing are disabled.")
