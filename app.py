@@ -27,6 +27,23 @@ from sarvam_client import LANGUAGES, SarvamError, check_pothole, translate, writ
 
 load_dotenv()
 
+
+def load_streamlit_secrets() -> str | None:
+    """Copy root-level Streamlit secrets (Streamlit Cloud) into os.environ, so every module reads config
+    the same way locally (.env) and when deployed. Returns an error message if the secrets are invalid."""
+    try:
+        secrets = dict(st.secrets)
+    except FileNotFoundError as e:  # StreamlitSecretNotFoundError: no secrets (normal locally) or bad TOML
+        if getattr(e, "error_id", "") == "no-secrets-found":
+            return None
+        return f'Streamlit secrets could not be read. Use TOML lines like KEY = "value".\n\n{e}'
+    for key, value in secrets.items():
+        if isinstance(value, (str, int, float, bool)):  # Streamlit itself skips bools, e.g. TEST_MODE = false
+            os.environ[key] = str(value)
+    return None
+
+
+SECRETS_ERROR = load_streamlit_secrets()
 DEPARTMENTS = json.loads((Path(__file__).resolve().parent / "departments.json").read_text(encoding="utf-8"))
 SARVAM_READY = bool(os.getenv("SARVAM_API_KEY", "").strip())
 GMAIL_READY = gmail_configured()
@@ -65,6 +82,8 @@ def run_translation(body: str, language: str) -> None:
 st.set_page_config(page_title="Pothole Complaint Agent", page_icon="🕳️")
 st.title("🕳️ Pothole Complaint Agent")
 st.caption("Photo → AI check → location → formal complaint → email to the road department. Powered by Sarvam AI.")
+if SECRETS_ERROR:
+    st.error(SECRETS_ERROR)
 
 if APP_PASSWORD and not ss.get("unlocked"):
     entered = st.text_input("App password", type="password")
@@ -76,9 +95,9 @@ if APP_PASSWORD and not ss.get("unlocked"):
     st.stop()
 
 if not SARVAM_READY:
-    st.error("SARVAM_API_KEY is missing in .env, so photo checking and letter writing are disabled.")
+    st.error("SARVAM_API_KEY is missing (.env locally, Secrets on Streamlit Cloud), so photo checking and letter writing are disabled.")
 if not GMAIL_READY:
-    st.error("GMAIL_ADDRESS / GMAIL_APP_PASSWORD are not set in .env, so sending is disabled.")
+    st.error("GMAIL_ADDRESS / GMAIL_APP_PASSWORD are not set (.env or Secrets), so sending is disabled.")
 if TEST_MODE:
     st.warning(f"TEST MODE: emails go to YOU ({GMAIL_ADDRESS if GMAIL_READY else 'GMAIL_ADDRESS'}), not the department.", icon="🧪")
 

@@ -99,11 +99,16 @@ class SarvamError(Exception):
     """A failure whose message can be shown to the user as-is."""
 
 
-@lru_cache(maxsize=1)
 def _client() -> SarvamAI:
     key = os.getenv("SARVAM_API_KEY", "").strip()
     if not key:
-        raise SarvamError("SARVAM_API_KEY is missing in .env.")
+        raise SarvamError("SARVAM_API_KEY is missing.")
+    return _client_for(key)
+
+
+@lru_cache(maxsize=1)
+def _client_for(key: str) -> SarvamAI:
+    """Cached per key, so an updated key (e.g. edited Streamlit secrets) is picked up without a restart."""
     return SarvamAI(api_subscription_key=key)
 
 
