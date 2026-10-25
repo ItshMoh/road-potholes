@@ -1,0 +1,6 @@
+streamlit>=1.40
+sarvamai>=0.1.37
+streamlit-js-eval>=0.1.7
+pillow>=10.0
+python-dotenv>=1.0
+pytest>=8.0

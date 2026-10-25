@@ -1,0 +1,20 @@
+[
+  {
+    "id": "varanasi_nagar_nigam",
+    "name": "Varanasi Nagar Nigam – Roads (Engineering Department)",
+    "email": "replace-me@example.com",
+    "covers": "City roads inside Varanasi Municipal Corporation limits"
+  },
+  {
+    "id": "nhai_varanasi",
+    "name": "NHAI – PIU Varanasi",
+    "email": "replace-me@example.com",
+    "covers": "National Highways (NH)"
+  },
+  {
+    "id": "up_pwd_varanasi",
+    "name": "UP PWD – Varanasi Division",
+    "email": "replace-me@example.com",
+    "covers": "State Highways (SH) and major district roads"
+  }
+]
